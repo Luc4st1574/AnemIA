@@ -111,7 +111,7 @@ class ControlPanel(tk.Tk):
             # Get frame and eye coordinates from the eye detector
             frame, eye_coords = self.eye_detector.get_frame_with_eyes()
 
-            if frame is not None:
+            if frame is not None and self.running:
                 # Check if eyes were detected (i.e., eye_coords is not empty)
                 if len(eye_coords) > 0:
                     for (x, y, w, h) in eye_coords:
@@ -138,7 +138,8 @@ class ControlPanel(tk.Tk):
                 self.video_label.after(0, lambda: self.video_label.config(image=imgtk))
                 self.video_label.imgtk = imgtk  # Keep a reference to avoid garbage collection
 
-            self.after(30)  # Small delay to prevent high CPU usage
+            if self.running:
+                self.after(30)  # Small delay to prevent high CPU usage
 
     def update_hb_value(self, event=None):
         """Update the Hb value label as the scale changes."""
@@ -171,4 +172,10 @@ class ControlPanel(tk.Tk):
         """Handle the window closing event."""
         self.running = False
         self.eye_detector.release()
+        self.update_thread.join()  # Wait for the thread to finish
         self.destroy()
+        
+    def stop_video_capture(self):
+        """Stop the video capture."""
+        self.running = False
+        self.eye_detector.release()

@@ -1,3 +1,4 @@
+#eye_detection.py
 import cv2
 
 class EyeRGBDetector:
@@ -52,10 +53,10 @@ class EyeRGBDetector:
                 cv2.rectangle(frame, (x+ex, y+ey), (x+ex+ew, y+ey+eh), (0, 255, 0), 2)
 
         # Draw diagnostic information
-        cv2.putText(frame, f"Faces detected: {len(faces)}", (10, 30), 
+        cv2.putText(frame, f"Caras detectadas: {len(faces)}", (10, 30), 
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.putText(frame, f"Eyes detected: {len(eyes)}", (10, 60), 
-                   cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.putText(frame, f"Ojos detectados: {len(eyes)}", (10, 60), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         return frame, eyes
 

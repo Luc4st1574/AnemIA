@@ -1,7 +1,8 @@
-numpy
-pandas
-scikit-learn
+numpy == 1.26.4
+pandas ==2.2.2
+scikit-learn ==1.5.2
+joblib ==1.4.2
 opencv-python
-joblib
-tk
-Pillow
+pillow ==10.4.0
+matplotlib == 3.9.1.post1
+seaborn ==0.13.2

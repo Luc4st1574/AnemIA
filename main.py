@@ -1,4 +1,3 @@
-# main.py
 from model import AnemiaModel
 from eye_detection import EyeRGBDetector
 from ui import ControlPanel
@@ -15,13 +14,20 @@ def main():
         print("Model not found. Training the model...")
         model.train()
         model.load_model()
+        print("Model training complete. Visualizations saved in the Model directory.")
 
     # Initialize the eye detector
     eye_detector = EyeRGBDetector()  # Try different indices (0, 1, 2)
 
     # Initialize and run the UI
     app = ControlPanel(eye_detector, model)
-    app.mainloop()
+    try:
+        app.mainloop()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        app.stop_video_capture()
+        print("Application closed.")
 
 if __name__ == "__main__":
     main()
