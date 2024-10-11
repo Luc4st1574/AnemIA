@@ -1,4 +1,3 @@
-#ui.py
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
@@ -128,8 +127,11 @@ class ControlPanel(tk.Tk):
                         text=f"RGB Values: {self.current_rgb}"
                     ))
 
+                # Convert frame from BGR to RGB color space
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
                 # Convert frame to ImageTk format
-                img = Image.fromarray(frame)
+                img = Image.fromarray(frame_rgb)
                 imgtk = ImageTk.PhotoImage(image=img)
 
                 # Update the video label in the main thread
@@ -137,7 +139,6 @@ class ControlPanel(tk.Tk):
                 self.video_label.imgtk = imgtk  # Keep a reference to avoid garbage collection
 
             self.after(30)  # Small delay to prevent high CPU usage
-
 
     def update_hb_value(self, event=None):
         """Update the Hb value label as the scale changes."""

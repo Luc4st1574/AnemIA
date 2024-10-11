@@ -1,4 +1,3 @@
-#eye_detection.py
 import cv2
 
 class EyeRGBDetector:
@@ -12,43 +11,10 @@ class EyeRGBDetector:
         self.eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye_tree_eyeglasses.xml')
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-    def simple_white_balance(self, frame):
-        # Split the frame into color channels
-        b, g, r = cv2.split(frame)
-        
-        # Find the average of each channel
-        r_avg = cv2.mean(r)[0]
-        g_avg = cv2.mean(g)[0]
-        b_avg = cv2.mean(b)[0]
-        
-        # Calculate scaling factors
-        avg = (r_avg + g_avg + b_avg) / 3
-        r_scale = avg / r_avg if r_avg > 0 else 1
-        g_scale = avg / g_avg if g_avg > 0 else 1
-        b_scale = avg / b_avg if b_avg > 0 else 1
-        
-        # Apply scaling to each channel
-        r = cv2.multiply(r, r_scale)
-        g = cv2.multiply(g, g_scale)
-        b = cv2.multiply(b, b_scale)
-        
-        # Merge channels back
-        balanced = cv2.merge([b, g, r])
-        return balanced
-
     def capture_frame(self):
         ret, frame = self.cap.read()
         if not ret:
             return None
-        
-        # Apply white balance
-        frame = self.simple_white_balance(frame)
-        
-        # Convert to YUV and back to BGR to normalize colors
-        yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
-        yuv[:,:,0] = cv2.equalizeHist(yuv[:,:,0])
-        frame = cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR)
-        
         return frame
 
     def get_frame_with_eyes(self):
@@ -87,7 +53,7 @@ class EyeRGBDetector:
 
         # Draw diagnostic information
         cv2.putText(frame, f"Faces detected: {len(faces)}", (10, 30), 
-                   cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         cv2.putText(frame, f"Eyes detected: {len(eyes)}", (10, 60), 
                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
