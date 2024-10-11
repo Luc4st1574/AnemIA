@@ -8,12 +8,10 @@
   <img src="https://img.shields.io/cii/level/1?logo=python" alt="CII Best Practices">
 </p>
 
-
-
 <p align="center">
-  <img src="https://github.com/Luc4st1574/AnemIA/blob/main/resources/anemIA.png" alt="logo" width="500">
+  <img src="https://github.com/Luc4st1574/AnemIA/blob/main/resources/logo.png" alt="logo" width="400">
 </p>
 
 <p align="center">
-  <img src="https://github.com/Luc4st1574/AnemIA/blob/main/resources/logo.png" alt="logo" width="400">
+  <img src="https://github.com/Luc4st1574/AnemIA/blob/main/resources/anemIA.png" alt="logo" width="500">
 </p>
