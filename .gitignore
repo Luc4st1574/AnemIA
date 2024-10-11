@@ -1,1 +1,5 @@
 __pycache__/
+logo.ico
+build/
+main.spec
+dist/
