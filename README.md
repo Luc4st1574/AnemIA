@@ -23,3 +23,16 @@
     <summary><h2 style="display: inline-block">This project aims to develop an AI-powered application that can detect anemia in patients through image analysis using machine learning (ML) and computer vision techniques. By leveraging libraries such as OpenCV for image processing and scikit-learn (sklearn) for machine learning, the application will analyze medical images (such as conjunctiva, fingernails, or even blood samples) to predict the likelihood of anemia. The goal is to create a non-invasive, quick, and accessible diagnostic tool to aid healthcare providers in identifying anemia, especially in regions with limited access to laboratory equipment.</h2></summary>
   </ul>
 </div>
+
+# How it Works
+
+<p align="center">
+  <img src="https://github.com/Luc4st1574/AnemIA/blob/main/resources/preview.png" alt="logo" width="500">
+</p>
+
+<div id="user-content-toc">
+  <ul align="start">
+    <summary><h2 style="display: inline-block">This Python application uses a Scikit-learn model to determine if a patient has anemia based on the RGB color values of their eyes, sex, and hemoglobin level. Users can easily input these details through a user-friendly interface. By clicking a button, the application processes the information and evaluates the likelihood of anemia, making it a valuable screening tool for healthcare professionals.</h2></summary>
+  </ul>
+</div>
+
