@@ -36,3 +36,26 @@
   </ul>
 </div>
 
+# Usage
+
+Download the `Release` called `main.exe` from [Github](https://github.com/Luc4st1574/LineFollowerRobot/releases)
+
+--------------------------------------------------------------------------- OR ---------------------------------------------------------------------------
+
+Just clone the repo `AnemIA` from `github` and run the main.py file:
+
+```shell
+git clone https://github.com/Luc4st1574/AnemIA
+```
+
+# Requirements
+
+Use the requirements.txt in order to get all the used dependencies
+
+```shell
+pip install -r requirements.txt
+```
+
+# Pull Request
+
+Any kind of pull request is avaible and it will review and added to the main code on its time!
