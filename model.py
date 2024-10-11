@@ -14,7 +14,7 @@ class AnemiaModel:
         self.data_path = data_path
         self.model_path = model_path
         self.model = None
-        self.scaler = None
+        self.feature_importance = None
 
     def load_data(self):
         """Load and preprocess the dataset."""
@@ -55,6 +55,9 @@ class AnemiaModel:
 
         # Get the best model
         self.model = grid_search.best_estimator_
+
+        # After training, store the feature importance
+        self.feature_importance = self.model.named_steps['rf'].feature_importances_
 
         # Save the model
         self.save_model()
@@ -101,19 +104,44 @@ class AnemiaModel:
         plt.close()
 
     def save_model(self):
-        """Save the trained model and scaler."""
+        """Save the trained model and feature importance."""
         os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
-        joblib.dump(self.model, self.model_path)
+        joblib.dump({
+            'model': self.model,
+            'feature_importance': self.feature_importance
+        }, self.model_path)
         print(f"Model saved to {self.model_path}")
 
     def load_model(self):
-        """Load the trained model."""
+        """Load the trained model and feature importance."""
         if not os.path.exists(self.model_path):
             raise FileNotFoundError(f"Model file not found at {self.model_path}. Please train the model first.")
-        self.model = joblib.load(self.model_path)
+        model_data = joblib.load(self.model_path)
+        self.model = model_data['model']
+        self.feature_importance = model_data['feature_importance']
 
     def predict(self, input_data):
-        """Make a prediction using the trained model."""
+        """Make a prediction using the trained model and return detailed information."""
         if self.model is None:
             self.load_model()
-        return self.model.predict(input_data)
+        
+        # Make prediction
+        prediction = self.model.predict(input_data)[0]
+        probability = self.model.predict_proba(input_data)[0]
+
+        # Get feature importance
+        if self.feature_importance is None:
+            self.feature_importance = self.model.named_steps['rf'].feature_importances_
+
+        # Create a dictionary with feature names and their values
+        features = dict(zip(['Sex', 'R', 'G', 'B', 'Hb'], input_data[0]))
+
+        # Create detailed information
+        details = {
+            'prediction': 'Anemia' if prediction == 1 else 'No Anemia',
+            'probability': probability[1] if prediction == 1 else probability[0],
+            'features': features,
+            'feature_importance': dict(zip(['Sex', 'R', 'G', 'B', 'Hb'], self.feature_importance))
+        }
+
+        return details

@@ -146,7 +146,7 @@ class ControlPanel(tk.Tk):
         self.hb_value_label.config(text=f"Selected Hb: {self.hb_var.get():.1f}")
 
     def predict_anemia(self):
-        """Handle the prediction logic."""
+        """Handle the prediction logic and display detailed results in a modal."""
         try:
             sex = self.sex_var.get()
             hb = self.hb_var.get()
@@ -158,15 +158,39 @@ class ControlPanel(tk.Tk):
             R, G, B = avg_rgb
 
             input_data = np.array([[sex, R, G, B, hb]])
-            prediction = self.model.predict(input_data)
+            details = self.model.predict(input_data)
 
-            result = "Anemia: Si" if prediction[0] == 1 else "Anemia: No"
-            messagebox.showinfo("Result", result)
+            # Display detailed results in a modal
+            self.show_results_modal(details)
 
         except ValueError as ve:
             messagebox.showerror("Input Error", f"Invalid input: {ve}")
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred during prediction.\n{e}")
+
+    def show_results_modal(self, details):
+        """Display detailed results in a modal window."""
+        modal = tk.Toplevel(self)
+        modal.title("Prediction Results")
+        modal.geometry("400x300")
+        modal.configure(bg='#2C2F33')
+
+        # Prediction and probability
+        tk.Label(modal, text=f"Prediction: {details['prediction']}", font=("Helvetica", 14), bg='#2C2F33', fg='white').pack(pady=10)
+        tk.Label(modal, text=f"Probability: {details['probability']:.2f}", font=("Helvetica", 12), bg='#2C2F33', fg='white').pack(pady=5)
+
+        # Feature values
+        tk.Label(modal, text="Feature Values:", font=("Helvetica", 12), bg='#2C2F33', fg='white').pack(pady=(10, 5))
+        for feature, value in details['features'].items():
+            tk.Label(modal, text=f"{feature}: {value}", font=("Helvetica", 10), bg='#2C2F33', fg='white').pack()
+
+        # Feature importance
+        tk.Label(modal, text="Feature Importance:", font=("Helvetica", 12), bg='#2C2F33', fg='white').pack(pady=(10, 5))
+        for feature, importance in details['feature_importance'].items():
+            tk.Label(modal, text=f"{feature}: {importance:.4f}", font=("Helvetica", 10), bg='#2C2F33', fg='white').pack()
+
+        # Close button
+        tk.Button(modal, text="Close", command=modal.destroy, font=("Helvetica", 12), bg='#7289DA', fg='white').pack(pady=20)
 
     def on_closing(self):
         """Handle the window closing event."""
