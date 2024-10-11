@@ -38,10 +38,6 @@
 
 # Usage
 
-Download the `Release` called `main.exe` from [Github](https://github.com/Luc4st1574/AnemIA/releases)
-
--------------------------------------------------------------- OR --------------------------------------------------------------
-
 Just clone the repo `AnemIA` from `github` and run the main.py file:
 
 ```shell
