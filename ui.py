@@ -47,7 +47,7 @@ class ControlPanel(tk.Tk):
 
         # === Add Image to Right Frame ===
         try:
-            image_path = "AnemIA\\logo.png"
+            image_path = "AnemIA\\resources\\logo.png"
             load = Image.open(image_path)
 
             if hasattr(Image, 'Resampling'):

@@ -8,7 +8,7 @@ from sklearn.metrics import accuracy_score, classification_report
 import joblib
 
 class AnemiaModel:
-    def __init__(self, data_path="AnemIA\\Anemia_Dataset.csv", model_path="AnemIA\\anemia_model.pkl"):
+    def __init__(self, data_path="AnemIA\\DataSet\\Anemia_Dataset.csv", model_path="AnemIA\\Model\\anemia_model.pkl"):
         self.data_path = data_path
         self.model_path = model_path
         self.model = None
