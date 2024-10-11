@@ -98,7 +98,7 @@ class ControlPanel(tk.Tk):
         self.rgb_label.grid(row=7, column=0, sticky='w', pady=(10, 5))
 
         # Predict Button with hover effect
-        predict_button = tk.Button(self.right_frame, text="Predicir Anemia", command=self.predict_anemia, font=("Helvetica", 12), bg='#7289DA', fg='white', activebackground='#99AAB5', activeforeground='black', relief=tk.FLAT)
+        predict_button = tk.Button(self.right_frame, text="Predecir Anemia", command=self.predict_anemia, font=("Helvetica", 12), bg='#7289DA', fg='white', activebackground='#99AAB5', activeforeground='black', relief=tk.FLAT)
         predict_button.grid(row=8, column=0, pady=(10, 20), sticky='ew')
 
         # Add hover effect for button
@@ -146,7 +146,7 @@ class ControlPanel(tk.Tk):
         self.hb_value_label.config(text=f"Selected Hb: {self.hb_var.get():.1f}")
 
     def predict_anemia(self):
-        """Handle the prediction logic and display detailed results in a modal."""
+        """Handle the prediction logic and display a simple message box with the result."""
         try:
             sex = self.sex_var.get()
             hb = self.hb_var.get()
@@ -160,37 +160,17 @@ class ControlPanel(tk.Tk):
             input_data = np.array([[sex, R, G, B, hb]])
             details = self.model.predict(input_data)
 
-            # Display detailed results in a modal
-            self.show_results_modal(details)
+            if details['prediction'] == 'Anemia':
+                message = "Se ha detectado anemia. Por favor, consulte a un médico para obtener más información y tratamiento adecuado."
+                messagebox.showwarning("Resultado de la Predicción", message)
+            else:
+                message = "¡Felicidades! No se ha detectado anemia. Mantenga una dieta saludable y hábitos de vida equilibrados."
+                messagebox.showinfo("Resultado de la Predicción", message)
 
         except ValueError as ve:
-            messagebox.showerror("Input Error", f"Invalid input: {ve}")
+            messagebox.showerror("Error de Entrada", f"Entrada inválida: {ve}")
         except Exception as e:
-            messagebox.showerror("Error", f"An error occurred during prediction.\n{e}")
-
-    def show_results_modal(self, details):
-        """Display detailed results in a modal window."""
-        modal = tk.Toplevel(self)
-        modal.title("Prediction Results")
-        modal.geometry("400x300")
-        modal.configure(bg='#2C2F33')
-
-        # Prediction and probability
-        tk.Label(modal, text=f"Prediction: {details['prediction']}", font=("Helvetica", 14), bg='#2C2F33', fg='white').pack(pady=10)
-        tk.Label(modal, text=f"Probability: {details['probability']:.2f}", font=("Helvetica", 12), bg='#2C2F33', fg='white').pack(pady=5)
-
-        # Feature values
-        tk.Label(modal, text="Feature Values:", font=("Helvetica", 12), bg='#2C2F33', fg='white').pack(pady=(10, 5))
-        for feature, value in details['features'].items():
-            tk.Label(modal, text=f"{feature}: {value}", font=("Helvetica", 10), bg='#2C2F33', fg='white').pack()
-
-        # Feature importance
-        tk.Label(modal, text="Feature Importance:", font=("Helvetica", 12), bg='#2C2F33', fg='white').pack(pady=(10, 5))
-        for feature, importance in details['feature_importance'].items():
-            tk.Label(modal, text=f"{feature}: {importance:.4f}", font=("Helvetica", 10), bg='#2C2F33', fg='white').pack()
-
-        # Close button
-        tk.Button(modal, text="Close", command=modal.destroy, font=("Helvetica", 12), bg='#7289DA', fg='white').pack(pady=20)
+            messagebox.showerror("Error", f"Ocurrió un error durante la predicción.\n{e}")
 
     def on_closing(self):
         """Handle the window closing event."""
