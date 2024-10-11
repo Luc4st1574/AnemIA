@@ -38,7 +38,7 @@
 
 # Usage
 
-Download the `Release` called `main.exe` from [Github](https://github.com/Luc4st1574/LineFollowerRobot/releases)
+Download the `Release` called `main.exe` from [Github](https://github.com/Luc4st1574/AnemIA/releases)
 
 -------------------------------------------------------------- OR --------------------------------------------------------------
 
