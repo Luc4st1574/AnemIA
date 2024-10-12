@@ -1,9 +1,11 @@
-#model.py
 import os
 import pandas as pd
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.pipeline import Pipeline
 import joblib
@@ -32,42 +34,79 @@ class AnemiaModel:
         return train_test_split(X, y, test_size=0.2, random_state=42)
 
     def train(self):
-        """Train the Random Forest model with hyperparameter tuning and save it."""
+        """Train the model using different classifiers with hyperparameter tuning and save the best one."""
         data = self.load_data()
         X_train, X_test, y_train, y_test = self.preprocess_data(data)
 
-        # Create a pipeline with scaling and Random Forest
-        pipeline = Pipeline([
-            ('scaler', StandardScaler()),
-            ('rf', RandomForestClassifier(random_state=42))
-        ])
+        # Create a pipeline with scaling
+        pipeline = Pipeline([('scaler', StandardScaler())])
 
-        # Define hyperparameters to tune
-        param_grid = {
-            'rf__n_estimators': [100, 200, 300],
-            'rf__max_depth': [None, 5, 10, 15],
-            'rf__min_samples_split': [2, 5, 10],
-            'rf__min_samples_leaf': [1, 2, 4]
+        # Define the classifiers to evaluate
+        classifiers = {
+            'RandomForest': RandomForestClassifier(random_state=42),
+            'GradientBoosting': GradientBoostingClassifier(random_state=42),
+            'SVM': SVC(probability=True, random_state=42),
+            'KNeighbors': KNeighborsClassifier(),
+            'LogisticRegression': LogisticRegression(max_iter=1000, random_state=42)
         }
 
-        # Perform grid search with cross-validation
-        grid_search = GridSearchCV(pipeline, param_grid, cv=5, n_jobs=-1, verbose=1)
-        grid_search.fit(X_train, y_train)
+        # Define hyperparameters for each classifier
+        param_grids = {
+            'RandomForest': {
+                'randomforest__n_estimators': [100, 200],
+                'randomforest__max_depth': [None, 10]
+            },
+            'GradientBoosting': {
+                'gradientboosting__n_estimators': [100, 200],
+                'gradientboosting__learning_rate': [0.01, 0.1],
+                'gradientboosting__max_depth': [3, 5]
+            },
+            'SVM': {
+                'svm__C': [0.1, 1, 10],
+                'svm__kernel': ['linear', 'rbf']
+            },
+            'KNeighbors': {
+                'kneighbors__n_neighbors': [3, 5, 7],
+                'kneighbors__weights': ['uniform', 'distance']
+            },
+            'LogisticRegression': {
+                'logisticregression__C': [0.1, 1, 10]
+            }
+        }
 
-        # Get the best model
-        self.model = grid_search.best_estimator_
+        best_model = None
+        best_score = 0
 
-        # After training, store the feature importance
-        self.feature_importance = self.model.named_steps['rf'].feature_importances_
+        # Iterate over classifiers and perform GridSearchCV
+        for name, classifier in classifiers.items():
+            pipeline.steps.append((name.lower(), classifier))
 
-        # Save the model
+            param_grid = param_grids.get(name)
+            if param_grid:
+                grid_search = GridSearchCV(pipeline, param_grid, cv=5, n_jobs=-1, verbose=1)
+                grid_search.fit(X_train, y_train)
+
+                score = grid_search.best_score_
+                print(f"{name} best score: {score:.2f}")
+
+                if score > best_score:
+                    best_score = score
+                    best_model = grid_search.best_estimator_
+
+            # Remove classifier from pipeline for next iteration
+            pipeline.steps.pop()
+
+        # Set the best model
+        self.model = best_model
+
+        # After training, store the feature importance if available
+        if 'randomforest' in self.model.named_steps:
+            self.feature_importance = self.model.named_steps['randomforest'].feature_importances_
+
+        # Save and evaluate the best model
         self.save_model()
-
-        # Evaluate the model
         self.evaluate(X_test, y_test)
 
-        # Analyze feature importance
-        self.analyze_feature_importance(X_train.columns)
 
     def evaluate(self, X_test, y_test):
         """Evaluate the trained model."""
@@ -93,16 +132,17 @@ class AnemiaModel:
 
     def analyze_feature_importance(self, feature_names):
         """Analyze and plot feature importance."""
-        importances = self.model.named_steps['rf'].feature_importances_
-        feature_imp = pd.DataFrame({'feature': feature_names, 'importance': importances})
-        feature_imp = feature_imp.sort_values('importance', ascending=False)
+        if self.feature_importance is not None:
+            importances = self.feature_importance
+            feature_imp = pd.DataFrame({'feature': feature_names, 'importance': importances})
+            feature_imp = feature_imp.sort_values('importance', ascending=False)
 
-        plt.figure(figsize=(10, 6))
-        sns.barplot(x='importance', y='feature', data=feature_imp)
-        plt.title('Feature Importance')
-        plt.tight_layout()
-        plt.savefig('AnemIA\\Model\\feature_importance.png')
-        plt.close()
+            plt.figure(figsize=(10, 6))
+            sns.barplot(x='importance', y='feature', data=feature_imp)
+            plt.title('Feature Importance')
+            plt.tight_layout()
+            plt.savefig('AnemIA\\Model\\feature_importance.png')
+            plt.close()
 
     def save_model(self):
         """Save the trained model and feature importance."""
@@ -131,7 +171,7 @@ class AnemiaModel:
         probability = self.model.predict_proba(input_data)[0]
 
         # Get feature importance
-        if self.feature_importance is None:
+        if self.feature_importance is None and 'rf' in self.model.named_steps:
             self.feature_importance = self.model.named_steps['rf'].feature_importances_
 
         # Create a dictionary with feature names and their values
