@@ -1,13 +1,9 @@
 import os
 import pandas as pd
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.svm import SVC
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.multioutput import MultiOutputRegressor
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, accuracy_score, classification_report
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -17,7 +13,6 @@ class AnemiaModel:
         self.data_path = data_path
         self.model_path = model_path
         self.model = None
-        self.feature_importance = None
 
     def load_data(self):
         """Load and preprocess the dataset."""
@@ -29,160 +24,123 @@ class AnemiaModel:
 
     def preprocess_data(self, data):
         """Split the data."""
-        X = data[['Sex', 'R', 'G', 'B', 'Hb']]
-        y = data['Anemic']
+        X = data[['Sex', 'R', 'G', 'B']]
+        y = data[['Hb', 'Anemic']]  # Multi-output: Hb (regression) and Anemic (classification)
         return train_test_split(X, y, test_size=0.2, random_state=42)
 
     def train(self):
-        """Train the model using different classifiers with hyperparameter tuning and save the best one."""
+        """Train the model for multi-output prediction and save the best one."""
         data = self.load_data()
         X_train, X_test, y_train, y_test = self.preprocess_data(data)
 
-        # Create a pipeline with scaling
-        pipeline = Pipeline([('scaler', StandardScaler())])
+        # Define the regressor for multi-output
+        regressor = RandomForestRegressor(random_state=42)
+        multi_output_regressor = MultiOutputRegressor(regressor)
 
-        # Define the classifiers to evaluate
-        classifiers = {
-            'RandomForest': RandomForestClassifier(random_state=42),
-            'GradientBoosting': GradientBoostingClassifier(random_state=42),
-            'SVM': SVC(probability=True, random_state=42),
-            'KNeighbors': KNeighborsClassifier(),
-            'LogisticRegression': LogisticRegression(max_iter=1000, random_state=42)
+        # Perform GridSearchCV for hyperparameter tuning
+        param_grid = {
+            'estimator__n_estimators': [100, 200],
+            'estimator__max_depth': [None, 10]
         }
+        grid_search = GridSearchCV(multi_output_regressor, param_grid, cv=5, n_jobs=-1, verbose=1, scoring='r2')
+        grid_search.fit(X_train, y_train)
 
-        # Define hyperparameters for each classifier
-        param_grids = {
-            'RandomForest': {
-                'randomforest__n_estimators': [100, 200],
-                'randomforest__max_depth': [None, 10]
-            },
-            'GradientBoosting': {
-                'gradientboosting__n_estimators': [100, 200],
-                'gradientboosting__learning_rate': [0.01, 0.1],
-                'gradientboosting__max_depth': [3, 5]
-            },
-            'SVM': {
-                'svm__C': [0.1, 1, 10],
-                'svm__kernel': ['linear', 'rbf']
-            },
-            'KNeighbors': {
-                'kneighbors__n_neighbors': [3, 5, 7],
-                'kneighbors__weights': ['uniform', 'distance']
-            },
-            'LogisticRegression': {
-                'logisticregression__C': [0.1, 1, 10]
-            }
-        }
-
-        best_model = None
-        best_score = 0
-
-        # Iterate over classifiers and perform GridSearchCV
-        for name, classifier in classifiers.items():
-            pipeline.steps.append((name.lower(), classifier))
-
-            param_grid = param_grids.get(name)
-            if param_grid:
-                grid_search = GridSearchCV(pipeline, param_grid, cv=5, n_jobs=-1, verbose=1)
-                grid_search.fit(X_train, y_train)
-
-                score = grid_search.best_score_
-                print(f"{name} best score: {score:.2f}")
-
-                if score > best_score:
-                    best_score = score
-                    best_model = grid_search.best_estimator_
-
-            # Remove classifier from pipeline for next iteration
-            pipeline.steps.pop()
-
-        # Set the best model
-        self.model = best_model
-
-        # After training, store the feature importance if available
-        if 'randomforest' in self.model.named_steps:
-            self.feature_importance = self.model.named_steps['randomforest'].feature_importances_
+        # Best model
+        self.model = grid_search.best_estimator_
+        print(f"Best model parameters: {grid_search.best_params_}")
 
         # Save and evaluate the best model
         self.save_model()
         self.evaluate(X_test, y_test)
 
-
     def evaluate(self, X_test, y_test):
         """Evaluate the trained model."""
         y_pred = self.model.predict(X_test)
-        accuracy = accuracy_score(y_test, y_pred)
-        print(f'Accuracy: {accuracy:.2f}')
-        print(classification_report(y_test, y_pred))
 
-        # Perform cross-validation
-        cv_scores = cross_val_score(self.model, X_test, y_test, cv=5)
-        print(f"Cross-validation scores: {cv_scores}")
-        print(f"Mean CV score: {cv_scores.mean():.2f} (+/- {cv_scores.std() * 2:.2f})")
+        # Separate Hb and Anemic outputs
+        y_test_hb, y_test_anemic = y_test['Hb'], y_test['Anemic']
+        y_pred_hb, y_pred_anemic = y_pred[:, 0], (y_pred[:, 1] > 0.5).astype(int)
 
-        # Plot confusion matrix
-        cm = confusion_matrix(y_test, y_pred)
-        plt.figure(figsize=(8, 6))
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-        plt.title('Confusion Matrix')
-        plt.ylabel('True label')
-        plt.xlabel('Predicted label')
-        plt.savefig('AnemIA\\Model\\confusion_matrix.png')
-        plt.close()
+        # Metrics for Hb (regression)
+        mse = mean_squared_error(y_test_hb, y_pred_hb)
+        mae = mean_absolute_error(y_test_hb, y_pred_hb)
+        r2 = r2_score(y_test_hb, y_pred_hb)
+        print("Regression - Hb Levels:")
+        print(f"Mean Squared Error (MSE): {mse:.2f}")
+        print(f"Mean Absolute Error (MAE): {mae:.2f}")
+        print(f"R² Score: {r2:.2f}")
 
-    def analyze_feature_importance(self, feature_names):
-        """Analyze and plot feature importance."""
-        if self.feature_importance is not None:
-            importances = self.feature_importance
-            feature_imp = pd.DataFrame({'feature': feature_names, 'importance': importances})
-            feature_imp = feature_imp.sort_values('importance', ascending=False)
+        # Metrics for Anemic (classification)
+        accuracy = accuracy_score(y_test_anemic, y_pred_anemic)
+        print("Classification - Anemia:")
+        print(f"Accuracy: {accuracy:.2f}")
+        print(classification_report(y_test_anemic, y_pred_anemic))
 
-            plt.figure(figsize=(10, 6))
-            sns.barplot(x='importance', y='feature', data=feature_imp)
-            plt.title('Feature Importance')
+        # Plot regression results
+        try:
+            plt.figure(figsize=(8, 6))
+            sns.scatterplot(x=y_test_hb, y=y_pred_hb)
+            plt.plot([y_test_hb.min(), y_test_hb.max()], [y_test_hb.min(), y_test_hb.max()], 'k--', lw=2)
+            plt.xlabel('Actual Hb Levels')
+            plt.ylabel('Predicted Hb Levels')
+            plt.title('Actual vs Predicted Hb Levels')
             plt.tight_layout()
-            plt.savefig('AnemIA\\Model\\feature_importance.png')
+            regression_path = 'AnemIA\\Model\\regression_evaluation.png'
+            os.makedirs(os.path.dirname(regression_path), exist_ok=True)
+            plt.savefig(regression_path)
             plt.close()
+            print(f"Regression evaluation plot saved at: {regression_path}")
+        except Exception as e:
+            print(f"Error generating regression plot: {e}")
+
+        # Plot confusion matrix for classification
+        try:
+            from sklearn.metrics import confusion_matrix
+            cm = confusion_matrix(y_test_anemic, y_pred_anemic)
+            plt.figure(figsize=(8, 6))
+            sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['No Anemia', 'Anemia'], yticklabels=['No Anemia', 'Anemia'])
+            plt.title('Confusion Matrix - Anemia')
+            plt.xlabel('Predicted')
+            plt.ylabel('Actual')
+            confusion_matrix_path = 'AnemIA\\Model\\confusion_matrix.png'
+            os.makedirs(os.path.dirname(confusion_matrix_path), exist_ok=True)
+            plt.savefig(confusion_matrix_path)
+            plt.close()
+            print(f"Confusion matrix plot saved at: {confusion_matrix_path}")
+        except Exception as e:
+            print(f"Error generating confusion matrix plot: {e}")
+
 
     def save_model(self):
-        """Save the trained model and feature importance."""
+        """Save the trained model."""
         os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
-        joblib.dump({
-            'model': self.model,
-            'feature_importance': self.feature_importance
-        }, self.model_path)
+        joblib.dump(self.model, self.model_path)
         print(f"Model saved to {self.model_path}")
 
     def load_model(self):
-        """Load the trained model and feature importance."""
         if not os.path.exists(self.model_path):
             raise FileNotFoundError(f"Model file not found at {self.model_path}. Please train the model first.")
-        model_data = joblib.load(self.model_path)
-        self.model = model_data['model']
-        self.feature_importance = model_data['feature_importance']
+        self.model = joblib.load(self.model_path)
+        print(f"Model loaded: {type(self.model)}")
 
     def predict(self, input_data):
-        """Make a prediction using the trained model and return detailed information."""
+        """Make predictions using the trained model."""
         if self.model is None:
             self.load_model()
-        
-        # Make prediction
-        prediction = self.model.predict(input_data)[0]
-        probability = self.model.predict_proba(input_data)[0]
 
-        # Get feature importance
-        if self.feature_importance is None and 'rf' in self.model.named_steps:
-            self.feature_importance = self.model.named_steps['rf'].feature_importances_
+        # Predict Hb levels and Anemia status
+        prediction = self.model.predict(input_data)
+        hb_prediction = prediction[:, 0]
+        anemia_prediction = (prediction[:, 1] > 0.5).astype(int)
 
         # Create a dictionary with feature names and their values
-        features = dict(zip(['Sex', 'R', 'G', 'B', 'Hb'], input_data[0]))
+        features = dict(zip(['Sex', 'R', 'G', 'B'], input_data[0]))
 
-        # Create detailed information
+        # Return predictions and details
         details = {
-            'prediction': 'Anemia' if prediction == 1 else 'No Anemia',
-            'probability': probability[1] if prediction == 1 else probability[0],
-            'features': features,
-            'feature_importance': dict(zip(['Sex', 'R', 'G', 'B', 'Hb'], self.feature_importance))
+            'predicted_Hb': hb_prediction[0],
+            'predicted_Anemic': 'Anemia' if anemia_prediction[0] == 1 else 'No Anemia',
+            'features': features
         }
 
         return details

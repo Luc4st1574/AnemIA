@@ -11,6 +11,9 @@ class EyeRGBDetector:
         # Load cascade classifiers
         self.eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye_tree_eyeglasses.xml')
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        
+    def __del__(self):
+        self.release()
 
     def capture_frame(self):
         ret, frame = self.cap.read()

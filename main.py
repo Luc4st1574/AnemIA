@@ -26,8 +26,8 @@ def main():
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
-        app.stop_video_capture()
         print("Application closed.")
+
 
 if __name__ == "__main__":
     main()
