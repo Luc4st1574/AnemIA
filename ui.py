@@ -133,14 +133,18 @@ class ControlPanel(tk.Tk):
     def save_to_csv(self, name, sex, R, G, B, hb, anemia):
         """Save prediction data to CSV file."""
         file_path = os.path.join("AnemIA\\Exported", "exported_anemia_data.csv")
-        os.makedirs("Exported", exist_ok=True)
+        os.makedirs("AnemIA\\Exported", exist_ok=True)
         file_exists = os.path.isfile(file_path)
+
+        # Convert 'Anemia' to 'Yes' and 'No'
+        anemia_status = "Yes" if anemia == 'Anemia' else "No"
 
         with open(file_path, mode='a', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
             if not file_exists:
                 writer.writerow(["Nombre", "Sexo", "R", "G", "B", "Hemoglobina", "Anemia"])
-            writer.writerow([name, "Hombre" if sex == 0 else "Mujer", R, G, B, f"{hb:.2f}", anemia])
+            writer.writerow([name, "Hombre" if sex == 0 else "Mujer", R, G, B, f"{hb:.2f}", anemia_status])
+
             
 
     def reset_ui(self):

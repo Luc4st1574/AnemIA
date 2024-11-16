@@ -1,3 +1,5 @@
 Nombre,Sexo,R,G,B,Hemoglobina,Anemia
-Lucas,Hombre,139,109,97,13.76,No Anemia
-Laura,Mujer,108,67,42,13.86,No Anemia
+Lucas,Hombre,139,109,97,13.76,No
+Laura,Mujer,108,67,42,13.86,No
+Marcos,Hombre,45,50,46,9.22,Yes
+Pablo,Hombre,42,53,45,9.05,Yes
