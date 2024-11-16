@@ -18,7 +18,7 @@ class ControlPanel(tk.Tk):
         self.running = True
         self.current_rgb = (0, 0, 0)
 
-        self.geometry("1000x700")
+        self.geometry("1000x800")
         self.configure(bg='#2C2F33')
 
         self.create_widgets()
@@ -49,36 +49,69 @@ class ControlPanel(tk.Tk):
         # Configure grid in right_frame
         self.right_frame.columnconfigure(0, weight=1)
 
+        # === Add Logo to Right Frame ===
+        try:
+            image_path = "AnemIA\\resources\\logo.png"
+            load = Image.open(image_path)
+            load = load.resize((150, 150), Image.LANCZOS)
+            self.logo_image = ImageTk.PhotoImage(load)
+
+            logo_label = tk.Label(self.right_frame, image=self.logo_image, bg='#23272A')
+            logo_label.grid(row=0, column=0, pady=(0, 20), sticky='n')
+        except Exception as e:
+            print(f"Error loading image: {e}")
+            logo_label = tk.Label(self.right_frame, text="Logo Here", font=("Arial", 16), bg='#23272A', fg='white')
+            logo_label.grid(row=0, column=0, pady=(0, 20), sticky='n')
+
+        # Add a rectangular image below the logo
+        try:
+            rect_image_path = "AnemIA\\resources\\anemIA.png"
+            rect_load = Image.open(rect_image_path)
+            rect_load = rect_load.resize((250, 50), Image.LANCZOS)
+            self.rect_image = ImageTk.PhotoImage(rect_load)
+
+            rect_label = tk.Label(self.right_frame, image=self.rect_image, bg='#23272A')
+            rect_label.grid(row=1, column=0, pady=(0, 20), sticky='n')
+        except Exception as e:
+            print(f"Error loading rectangle image: {e}")
+            rect_label = tk.Label(self.right_frame, text="Rectangle Image Here", font=("Arial", 16), bg='#23272A', fg='white')
+            rect_label.grid(row=1, column=0, pady=(0, 20), sticky='n')
+
         # Patient Name Input
-        tk.Label(self.right_frame, text="Nombre del paciente:", font=("Helvetica", 12), bg='#23272A', fg='white').grid(row=0, column=0, sticky='w')
-        self.patient_name_entry = tk.Entry(self.right_frame, font=("Helvetica", 12))
-        self.patient_name_entry.grid(row=1, column=0, pady=(5, 20), sticky='ew')
+        tk.Label(self.right_frame, text="Nombre del paciente:", font=("Helvetica", 12, "bold"), bg='#23272A', fg='white').grid(row=2, column=0, sticky='w', pady=(10, 5))
+        self.patient_name_entry = tk.Entry(self.right_frame, font=("Helvetica", 12), bg='#2C2F33', fg='white', relief="flat", insertbackground='white')
+        self.patient_name_entry.grid(row=3, column=0, pady=(5, 20), sticky='ew')
+        self.patient_name_entry.insert(0, "Escribe aquí...")  # Placeholder text
+        self.patient_name_entry.bind("<FocusIn>", lambda e: self.patient_name_entry.delete(0, tk.END))
 
         # Label for predicted Hb value
-        self.hb_value_label = tk.Label(self.right_frame, text="Hemoglobina estimada: --", font=("Helvetica", 12), bg='#23272A', fg='white')
-        self.hb_value_label.grid(row=2, column=0, pady=(10, 20), sticky='w')
+        self.hb_value_label = tk.Label(self.right_frame, text="Hemoglobina estimada: --", font=("Helvetica", 12, "bold"), bg='#23272A', fg='#00FF7F')
+        self.hb_value_label.grid(row=4, column=0, pady=(10, 20), sticky='w')
 
         # RGB Label
-        self.rgb_label = tk.Label(self.right_frame, text="RGB Values: (0, 0, 0)", font=("Helvetica", 12), bg='#23272A', fg='white')
-        self.rgb_label.grid(row=3, column=0, pady=(10, 20), sticky='w')
+        self.rgb_label = tk.Label(self.right_frame, text="RGB Values: (0, 0, 0)", font=("Helvetica", 12), bg='#23272A', fg='#7289DA')
+        self.rgb_label.grid(row=5, column=0, pady=(10, 20), sticky='w')
 
-        # Sex Input
-        tk.Label(self.right_frame, text="Sexo:", font=("Helvetica", 12), bg='#23272A', fg='white').grid(row=4, column=0, sticky='w')
+        # Frame for Sex Input
+        sex_frame = tk.LabelFrame(self.right_frame, text="Sexo", font=("Helvetica", 12, "bold"), bg='#23272A', fg='white', padx=10, pady=10)
+        sex_frame.grid(row=6, column=0, pady=10, sticky='ew')
         self.sex_var = tk.IntVar(value=0)  # Default: Male (0)
-        tk.Radiobutton(self.right_frame, text="Hombre", variable=self.sex_var, value=0, font=("Helvetica", 12), bg='#23272A', fg='white', selectcolor='#99AAB5').grid(row=5, column=0, sticky='w')
-        tk.Radiobutton(self.right_frame, text="Mujer", variable=self.sex_var, value=1, font=("Helvetica", 12), bg='#23272A', fg='white', selectcolor='#99AAB5').grid(row=6, column=0, sticky='w')
+        tk.Radiobutton(sex_frame, text="Hombre", variable=self.sex_var, value=0, font=("Helvetica", 12), bg='#23272A', fg='white', selectcolor='#99AAB5').pack(anchor='w')
+        tk.Radiobutton(sex_frame, text="Mujer", variable=self.sex_var, value=1, font=("Helvetica", 12), bg='#23272A', fg='white', selectcolor='#99AAB5').pack(anchor='w')
 
         # Predict Button
-        predict_button = tk.Button(self.right_frame, text="Predecir Anemia", command=self.predict_anemia, font=("Helvetica", 12), bg='#7289DA', fg='white')
+        predict_button = tk.Button(self.right_frame, text="Predecir Anemia", command=self.predict_anemia, font=("Helvetica", 12, "bold"), bg='#7289DA', fg='white', relief="flat", overrelief="raised")
         predict_button.grid(row=7, column=0, pady=20, sticky='ew')
 
         # Reset Button
-        reset_button = tk.Button(self.right_frame, text="Nueva Predicción", command=self.reset_ui, font=("Helvetica", 12), bg='#99AAB5', fg='white')
+        reset_button = tk.Button(self.right_frame, text="Nueva Predicción", command=self.reset_ui, font=("Helvetica", 12, "bold"), bg='#99AAB5', fg='white', relief="flat", overrelief="raised")
         reset_button.grid(row=8, column=0, pady=10, sticky='ew')
 
         # Close Button
-        close_button = tk.Button(self.right_frame, text="Cerrar", command=self.on_closing, font=("Helvetica", 12), bg='#FF5C5C', fg='white')
+        close_button = tk.Button(self.right_frame, text="Cerrar", command=self.on_closing, font=("Helvetica", 12, "bold"), bg='#FF5C5C', fg='white', relief="flat", overrelief="raised")
         close_button.grid(row=9, column=0, pady=10, sticky='ew')
+
+
 
     def update_video_thread(self):
         """Thread function to continuously update video and RGB values."""

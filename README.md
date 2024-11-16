@@ -27,7 +27,7 @@
 # How it Works
 
 <p align="center">
-  <img src="https://github.com/Luc4st1574/AnemIA/blob/main/resources/preview.png" alt="logo" width="500">
+  <img src="https://github.com/Luc4st1574/AnemIA/blob/main/resources/preview_.png" alt="logo" width="500">
 </p>
 
 <div id="user-content-toc">
