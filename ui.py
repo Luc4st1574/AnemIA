@@ -67,7 +67,7 @@ class ControlPanel(tk.Tk):
         try:
             rect_image_path = "AnemIA\\resources\\anemIA.png"
             rect_load = Image.open(rect_image_path)
-            rect_load = rect_load.resize((250, 50), Image.LANCZOS)
+            rect_load = rect_load.resize((300, 75), Image.LANCZOS)
             self.rect_image = ImageTk.PhotoImage(rect_load)
 
             rect_label = tk.Label(self.right_frame, image=self.rect_image, bg='#23272A')
